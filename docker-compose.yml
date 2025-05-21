@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  espocrm-db:
+    image: mariadb:10.6
+    container_name: espocrm-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: espocrm
+      MYSQL_USER: espocrm
+      MYSQL_PASSWORD: espopass
+    volumes:
+      - espocrm-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 20s
+
+  espocrm:
+    image: espocrm/espocrm:latest
+    container_name: espocrm
+    depends_on:
+      espocrm-db:
+        condition: service_healthy
+    ports:
+      - "8080:80"  # Change 8080 to 8081 if 8080 is taken
+    environment:
+      DB_HOST: espocrm-db
+      DB_NAME: espocrm
+      DB_USER: espocrm
+      DB_PASSWORD: espopass
+    volumes:
+      - espocrm-data:/var/www/html
+    restart: always
+
+volumes:
+  espocrm-db:
+  espocrm-data:
